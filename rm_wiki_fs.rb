@@ -8,7 +8,7 @@ require 'uri'
 
 require 'pry'
 
-class RedMineFS < FuseFS::FuseDir
+class RMWikiFS < FuseFS::FuseDir
   def initialize(redmine_wiki_root)
     @redmine_wiki_root = redmine_wiki_root
 

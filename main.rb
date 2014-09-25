@@ -24,7 +24,7 @@ if File.basename($0) == File.basename(__FILE__)
   # redmine_wiki_rootはこんな感じ
   # http://www.redmine.org/projects/redmine/wiki/
 
-  root = RedMineFS.new redmine_wiki_root
+  root = RMWikiFS.new redmine_wiki_root
 
   FuseFS.set_root(root)
   FuseFS.mount_under(mount_point)
