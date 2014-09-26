@@ -15,8 +15,6 @@ class RMWikiFS < FuseFS::FuseDir
     @redmine_wiki_root = redmine_wiki_root
 
     @http_client = HTTPClient.new
-
-    @counter = 0
   end
 
   def directory? path
