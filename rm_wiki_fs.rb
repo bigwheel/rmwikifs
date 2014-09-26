@@ -22,8 +22,23 @@ class RMWikiFS < FuseFS::FuseDir
     not file?(path)
   end
 
-  def file? path
+  def json? path
     path =~ /.*\.json\Z/
+  end
+
+  def file? path
+    json? path
+  end
+
+  def rename from_path, to_path
+    if file?(from_path) && file?(to_path) &&
+      File::dirname(from_path) == File::dirname(to_path)
+      @renamer.rename File::basename(from_path, '.json'),
+        File::basename(to_path, '.json')
+      true
+    else
+      false
+    end
   end
 
   #def can_delete?; true end
