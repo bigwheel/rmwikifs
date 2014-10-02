@@ -7,12 +7,12 @@ require 'uri'
 
 require 'pry'
 
+require 'rmwiki'
+
 class RMWikiFS < FuseFS::FuseDir
   def initialize wiki_root, username, password
-    @wiki_root = wiki_root
-    @http_client = HTTPClient.new
-    @renamer = RMWikiRenamer.new @http_client, @wiki_root,
-      username, password
+    @rmwiki = Rmwiki.new(wiki_root, username, password)
+    @tree = @rmwiki.tree
   end
 
   def directory? path
@@ -27,44 +27,32 @@ class RMWikiFS < FuseFS::FuseDir
     json? path
   end
 
-  def rename from_path, to_path
-    if file?(from_path) && file?(to_path) &&
-      File::dirname(from_path) == File::dirname(to_path)
-      @renamer.rename File::basename(from_path, '.json'),
-        File::basename(to_path, '.json')
-      true
-    else
-      false
-    end
-  end
+#  def rename from_path, to_path
+#    if file?(from_path) && file?(to_path) &&
+#      File::dirname(from_path) == File::dirname(to_path)
+#      @renamer.rename File::basename(from_path, '.json'),
+#        File::basename(to_path, '.json')
+#      true
+#    else
+#      false
+#    end
+#  end
 
   #def can_delete?; true end
 
   #def can_write? path; file? path end
 
   def contents path
-    def select_child_pages wiki_pages, parent_name
-      wiki_pages.select { |page|
-        page.has_key?('parent') && page['parent']['title'] == parent_name
-      }
-    end
-    # TODO: このFile.joinの使い方は正しくないが面倒なので一旦これで行く
-    response = @http_client.get(File.join(@wiki_root, 'index.json'))
-    if response.status == 200
-      json = JSON.parse(response.content)
-      child_pages = if path == '/'
-                      json['wiki_pages'].reject { |page| page.has_key? 'parent' }
-                    else
-                      select_child_pages json['wiki_pages'], File::basename(path)
-                    end
-      child_pages.map { |page| page['title'] }.
-        map { |title|
-        if select_child_pages(json['wiki_pages'], title).empty?
-          [ title + '.json' ]
+    if path == '/'
+      res = @tree.map { |_, page|
+        if page.children.empty?
+          [page.title + '.json']
         else
-          [ title, title + '.json' ]
+          [page.title + '.json', page.title]
         end
       }.flatten
+      p res
+      res
     else
       []
     end
@@ -78,19 +66,9 @@ class RMWikiFS < FuseFS::FuseDir
   #  obj.save
   #end
 
+  # とりあえずページ内部だけ出す
   def read_file path
-    # TODO: 本当はURIエスケープも使うべきじゃないんだけど・・・
-    # こうしてみるとRubyもbad parts増えてきたなあ
-    page_name = File::basename(path)
-    response = @http_client.get(File.join(@wiki_root, URI::escape(page_name)))
-    if response.status == 200
-      json = JSON.parse(response.content)
-      a = JSON.pretty_generate(json)
-      a # TODO: なぜかファイルで開くと末尾の数文字〜数行が
-      # 出ないファイルがある。サイズが大きいの？謎
-    else
-      ''
-    end
+    @rmwiki.page(File::basename(path, '.json')).text
   end
 end
 

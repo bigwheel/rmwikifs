@@ -1,8 +1,8 @@
 GIT
   remote: git@github.com:bigwheel/rmwiki.git
-  revision: 19fcb8e57c5b0c04e5639119e1e5ec492a260c7e
+  revision: 2647c79c3741a834855cf4cabb05f22720af8783
   specs:
-    rmwiki (0.0.1)
+    rmwiki (0.0.3)
       httpclient
       nokogiri
 
@@ -28,8 +28,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  httpclient
-  nokogiri
   pry
   rfusefs
   rmwiki!
