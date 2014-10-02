@@ -43,19 +43,25 @@ class RMWikiFS < FuseFS::FuseDir
   #def can_write? path; file? path end
 
   def contents path
-    if path == '/'
-      res = @tree.map { |_, page|
-        if page.children.empty?
-          [page.title + '.json']
-        else
-          [page.title + '.json', page.title]
-        end
-      }.flatten
-      p res
-      res
-    else
-      []
-    end
+    dirs = scan_path(path)
+    children_pages = if dirs.empty?
+                       @tree
+                     elsif dirs[0] =~ /\.Trash.*/ # ubuntuが勝手にするゴミ箱作成対策
+                       []
+                     else
+                       pages = @tree
+                       p dirs
+                       dirs.each { |dir_name| pages = pages[dir_name].children }
+                       pages
+                     end
+
+    children_pages.map { |_, page|
+      if page.children.empty?
+        [page.title + '.json']
+      else
+        [page.title + '.json', page.title]
+      end
+    }.flatten
   end
 
   # def size(path) TODO: headerでアクセスして長さだけ取ってくればいいんじゃないかな
