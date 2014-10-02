@@ -27,16 +27,17 @@ class RMWikiFS < FuseFS::FuseDir
     json? path
   end
 
-#  def rename from_path, to_path
-#    if file?(from_path) && file?(to_path) &&
-#      File::dirname(from_path) == File::dirname(to_path)
-#      @renamer.rename File::basename(from_path, '.json'),
-#        File::basename(to_path, '.json')
-#      true
-#    else
-#      false
-#    end
-#  end
+  def rename from_path, to_path
+    if file?(from_path) && file?(to_path)
+      parent = File::dirname(to_path)
+      parent = nil if parent == '/'
+      @rmwiki.rename File::basename(from_path, '.json'), File::basename(to_path, '.json'), parent
+      @tree = @rmwiki.tree # ツリーを更新
+      true
+    else
+      false
+    end
+  end
 
   #def can_delete?; true end
 
@@ -49,8 +50,7 @@ class RMWikiFS < FuseFS::FuseDir
                      elsif dirs[0] =~ /\.Trash.*/ # ubuntuが勝手にするゴミ箱作成対策
                        []
                      else
-                       pages = @tree
-                       p dirs
+                       pages = @tree # TODO: たぶんここfold使うべき
                        dirs.each { |dir_name| pages = pages[dir_name].children }
                        pages
                      end
