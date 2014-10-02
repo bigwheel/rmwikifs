@@ -3,18 +3,15 @@
 require 'rubygems'
 require 'fusefs'
 require 'json'
-require 'httpclient'
 require 'uri'
 
 require 'pry'
 
-require_relative 'rm_wiki_renamer'
-
 class RMWikiFS < FuseFS::FuseDir
-  def initialize redmine_wiki_root, username, password
-    @redmine_wiki_root = redmine_wiki_root
+  def initialize wiki_root, username, password
+    @wiki_root = wiki_root
     @http_client = HTTPClient.new
-    @renamer = RMWikiRenamer.new @http_client, @redmine_wiki_root,
+    @renamer = RMWikiRenamer.new @http_client, @wiki_root,
       username, password
   end
 
@@ -52,7 +49,7 @@ class RMWikiFS < FuseFS::FuseDir
       }
     end
     # TODO: このFile.joinの使い方は正しくないが面倒なので一旦これで行く
-    response = @http_client.get(File.join(@redmine_wiki_root, 'index.json'))
+    response = @http_client.get(File.join(@wiki_root, 'index.json'))
     if response.status == 200
       json = JSON.parse(response.content)
       child_pages = if path == '/'
@@ -85,7 +82,7 @@ class RMWikiFS < FuseFS::FuseDir
     # TODO: 本当はURIエスケープも使うべきじゃないんだけど・・・
     # こうしてみるとRubyもbad parts増えてきたなあ
     page_name = File::basename(path)
-    response = @http_client.get(File.join(@redmine_wiki_root, URI::escape(page_name)))
+    response = @http_client.get(File.join(@wiki_root, URI::escape(page_name)))
     if response.status == 200
       json = JSON.parse(response.content)
       a = JSON.pretty_generate(json)
