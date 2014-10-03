@@ -5,19 +5,28 @@ require 'fusefs'
 
 require_relative 'rm_wiki_fs'
 
-def argument_validation
-  if ARGV.length != 4
-    puts("Usage: #{$0} {{directory}} {{redmine_root}} " +
-         "{{rm_username}} {{rm_password}")
-    exit false
-  end
-
+def directory_check
   unless File.directory? ARGV[0]
     puts "#{ARGV[0]} is not a directory"
     exit false
   end
+end
 
-  ARGV
+def argument_validation
+  if ARGV.length == 4
+    directory_check ARGV[0]
+    ARGV
+  elsif ARGV.length == 3
+    directory_check ARGV[0]
+    require 'io/console'
+    print 'password:'
+    password = STDIN.noecho(&:gets).chomp
+    ARGV[0..2] + [password]
+  else
+    puts("Usage: #{$0} {{directory}} {{redmine_root}} " +
+         "{{rm_username}}")
+    exit false
+  end
 end
 
 if File.basename($0) == File.basename(__FILE__)
