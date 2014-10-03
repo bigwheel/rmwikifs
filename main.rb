@@ -5,9 +5,9 @@ require 'fusefs'
 
 require_relative 'rm_wiki_fs'
 
-def directory_check
-  unless File.directory? ARGV[0]
-    puts "#{ARGV[0]} is not a directory"
+def directory_check path
+  unless File.directory? path
+    puts "#{path} is not a directory"
     exit false
   end
 end
